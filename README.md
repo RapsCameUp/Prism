@@ -8,148 +8,7 @@ The platform ingests real-time telemetry from Splunk through the MCP protocol, r
 
 ## Architecture Overview
 
-```mermaid
-flowchart TB
-    %% ───── External Data Sources ─────
-    subgraph SPLUNK["Splunk Enterprise (localhost:8089)"]
-        direction TB
-        IDX_MAIN["index=main<br/>Application Logs"]
-        IDX_DEPLOY["index=deployments<br/>Deployment Events"]
-        IDX_INC["index=incidents<br/>Detected Incidents"]
-        IDX_METRICS["index=metrics<br/>Service Metrics"]
-        SPLUNK_MCP["Splunk MCP Server<br/>(Model Context Protocol)"]
-    end
-
-    subgraph CISCO["Cisco CDTSM (localhost:8080)"]
-        CDTSM_INFER["/cdtsm/v1/ai/infer<br/>Time Series Inference"]
-        CDTSM_READY["/ready<br/>Health Check"]
-    end
-
-    subgraph GEMINI["Google Gemini AI"]
-        GEMINI_API["gemini-2.5-flash-lite<br/>LLM Inference"]
-    end
-
-    subgraph GITHUB["GitHub (RapsCameUp org)"]
-        GH_REPOS["Repositories<br/>checkout / payment / auth<br/>notification / inventory"]
-        GH_PRS["Pull Requests"]
-        GH_ISSUES["Issues"]
-    end
-
-    %% ───── PRISM Backend ─────
-    subgraph BACKEND["PRISM Backend (Fastify · port 5000)"]
-        direction TB
-
-        subgraph INTEGRATIONS["Integration Layer"]
-            SPLUNK_SVC["Splunk Service<br/>REST API Client"]
-            CDTSM_CLIENT["CDTSM Client<br/>Anomaly Scoring"]
-            GEMINI_CLIENT["Gemini Client<br/>queryGemini() / queryGeminiJSON()"]
-            GITHUB_SVC["GitHub Service<br/>PR / Issue / Branch API"]
-        end
-
-        subgraph AGENTS["AI Agent Ecosystem"]
-            COORDINATOR["Coordinator Agent<br/>Orchestrates 5-phase investigation"]
-            TELEMETRY_AGENT["Telemetry Agent<br/>Log analysis & anomaly detection"]
-            DEPLOY_AGENT["Deployment Agent<br/>Correlation analysis"]
-            RC_AGENT["Root Cause Agent<br/>AI-powered diagnosis"]
-            PR_AGENT["PR Traceback Agent<br/>Code change correlation"]
-            REMED_AGENT["Remediation Agent<br/>Fix recommendation"]
-            PREDICT_AGENT["Predictive Agent<br/>CDTSM anomaly forecasting"]
-        end
-
-        subgraph SERVICES["Service Layer"]
-            INC_SVC["Incident Service"]
-            INV_SVC["Investigation Service"]
-            REMED_SVC["Remediation Service"]
-        end
-
-        subgraph SCHEDULER["Job Scheduler"]
-            PREDICT_JOB["Prediction Cycle<br/>(every 2 min)"]
-        end
-
-        DB[(MongoDB Atlas<br/>via Prisma)]
-        SOCKET["Socket.IO<br/>Real-time Events"]
-    end
-
-    %% ───── PRISM Frontend ─────
-    subgraph FRONTEND["PRISM Frontend (React · port 5173)"]
-        direction TB
-        DASHBOARD["Command Center Dashboard"]
-        INC_LIST["Incident Registry"]
-        INC_DETAIL["Incident Details<br/>+ AI Investigation"]
-        ASK_AI["Ask AI Chat<br/>(Gemini-powered)"]
-        REMED_UI["Remediation Center"]
-    end
-
-    %% ───── Data Flow: Splunk → Backend ─────
-    IDX_MAIN -->|"SPL: index=main level=ERROR"| SPLUNK_SVC
-    IDX_DEPLOY -->|"SPL: index=deployments"| SPLUNK_SVC
-    IDX_INC -->|"SPL: index=incidents"| SPLUNK_SVC
-    IDX_METRICS -->|"SPL: index=metrics metric=*"| SPLUNK_SVC
-    SPLUNK_MCP -.->|"MCP Protocol"| SPLUNK_SVC
-
-    %% ───── Data Flow: CDTSM ─────
-    IDX_METRICS -->|"Fetch metric time series"| SPLUNK_SVC
-    SPLUNK_SVC -->|"coarse_ctx + fine_ctx"| CDTSM_CLIENT
-    CDTSM_CLIENT -->|"POST /cdtsm/v1/ai/infer<br/>horizon=6, quantiles=[p10,p50,p90]"| CDTSM_INFER
-    CDTSM_INFER -->|"predictions: mean[], quantiles{}"| CDTSM_CLIENT
-    CDTSM_CLIENT -->|"anomalyScore, failureWindow"| PREDICT_AGENT
-    CDTSM_READY -->|"200 OK"| CDTSM_CLIENT
-
-    %% ───── Data Flow: Gemini ─────
-    GEMINI_CLIENT -->|"Structured prompts"| GEMINI_API
-    GEMINI_API -->|"JSON / text responses"| GEMINI_CLIENT
-    TELEMETRY_AGENT -->|"Anomaly identification"| GEMINI_CLIENT
-    DEPLOY_AGENT -->|"Correlation analysis"| GEMINI_CLIENT
-    RC_AGENT -->|"Root cause synthesis"| GEMINI_CLIENT
-    REMED_AGENT -->|"Fix recommendations"| GEMINI_CLIENT
-    ASK_AI -->|"Contextual Q&A"| GEMINI_CLIENT
-
-    %% ───── Data Flow: GitHub ─────
-    GITHUB_SVC --> GH_PRS
-    GITHUB_SVC --> GH_ISSUES
-    GITHUB_SVC --> GH_REPOS
-    PR_AGENT -->|"Fetch PR diffs & commits"| GITHUB_SVC
-    REMED_SVC -->|"Create branch → commit → PR"| GITHUB_SVC
-    INV_SVC -->|"Auto-create issue (critical)"| GITHUB_SVC
-
-    %% ───── Agent Orchestration ─────
-    COORDINATOR --> TELEMETRY_AGENT
-    COORDINATOR --> DEPLOY_AGENT
-    COORDINATOR --> RC_AGENT
-    COORDINATOR --> PR_AGENT
-    COORDINATOR --> REMED_AGENT
-
-    %% ───── Predictive Pipeline ─────
-    PREDICT_JOB -->|"Trigger every 2 min"| PREDICT_AGENT
-    PREDICT_AGENT -->|"Fetch 5 metrics per service"| SPLUNK_SVC
-    PREDICT_AGENT -->|"Score via CDTSM"| CDTSM_CLIENT
-    PREDICT_AGENT -->|"Create predicted incident"| DB
-
-    %% ───── Service Layer ─────
-    INC_SVC --> SPLUNK_SVC
-    INC_SVC --> DB
-    INV_SVC --> COORDINATOR
-    INV_SVC --> DB
-    REMED_SVC --> DB
-
-    %% ───── Frontend ↔ Backend ─────
-    FRONTEND -->|"REST API + JWT Auth"| BACKEND
-    SOCKET -->|"Agent events (real-time)"| FRONTEND
-
-    %% Styling
-    classDef splunk fill:#65a637,stroke:#3c6819,color:#fff
-    classDef cisco fill:#049fd9,stroke:#036fa6,color:#fff
-    classDef gemini fill:#8e44ad,stroke:#6c3483,color:#fff
-    classDef github fill:#24292e,stroke:#1b1f23,color:#fff
-    classDef agent fill:#1a1a2e,stroke:#16213e,color:#e94560
-    classDef frontend fill:#0f3460,stroke:#1a1a2e,color:#e2e8f0
-
-    class IDX_MAIN,IDX_DEPLOY,IDX_INC,IDX_METRICS,SPLUNK_MCP splunk
-    class CDTSM_INFER,CDTSM_READY cisco
-    class GEMINI_API gemini
-    class GH_REPOS,GH_PRS,GH_ISSUES github
-    class COORDINATOR,TELEMETRY_AGENT,DEPLOY_AGENT,RC_AGENT,PR_AGENT,REMED_AGENT,PREDICT_AGENT agent
-```
+![PRISM Architecture Diagram](architecture_diagram.png)
 
 ---
 
@@ -455,11 +314,11 @@ The `prism-be/splunk-data/` directory contains CSV files to upload into Splunk:
 
 | Service | Repository | Description |
 |---------|-----------|-------------|
-| `checkout-service` | RapsCameUp/checkout-service | Shopping cart & order processing |
-| `payment-service` | RapsCameUp/payment-service | Payment gateway integration |
-| `auth-service` | RapsCameUp/auth-service | Authentication & token management |
-| `notification-service` | RapsCameUp/notification-service | Email, SMS, push notifications |
-| `inventory-service` | RapsCameUp/inventory-service | Stock management & reservations |
+| `checkout-service` | [RapsCameUp/checkout-service](https://github.com/RapsCameUp/checkout-service) | Shopping cart & order processing |
+| `payment-service` | [RapsCameUp/payment-service](https://github.com/RapsCameUp/payment-service) | Payment gateway integration |
+| `auth-service` | [RapsCameUp/auth-service](https://github.com/RapsCameUp/auth-service) | Authentication & token management |
+| `notification-service` | [RapsCameUp/notification-service](https://github.com/RapsCameUp/notification-service) | Email, SMS, push notifications |
+| `inventory-service` | [RapsCameUp/inventory-service](https://github.com/RapsCameUp/inventory-service) | Stock management & reservations |
 
 ---
 
@@ -573,11 +432,7 @@ prism/
 │       ├── components/          ← UI components
 │       ├── api/                 ← API client, hooks, adapters
 │       └── store/               ← Zustand state
-├── checkout-service/            ← Monitored microservice
-├── payment-service/             ← Monitored microservice
-├── auth-service/                ← Monitored microservice
-├── notification-service/        ← Monitored microservice
-└── inventory-service/           ← Monitored microservice
+
 ```
 
 ---
