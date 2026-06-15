@@ -573,11 +573,7 @@ prism/
 │       ├── components/          ← UI components
 │       ├── api/                 ← API client, hooks, adapters
 │       └── store/               ← Zustand state
-├── checkout-service/            ← Monitored microservice
-├── payment-service/             ← Monitored microservice
-├── auth-service/                ← Monitored microservice
-├── notification-service/        ← Monitored microservice
-└── inventory-service/           ← Monitored microservice
+
 ```
 
 ---
