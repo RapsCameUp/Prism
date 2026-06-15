@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRISM Architecture Diagram</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f1419;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 40px;
+    }
+    .page {
+      max-width: 1400px;
+      margin: 0 auto;
+      background: #1a2332;
+      border-radius: 16px;
+      padding: 48px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #00d4aa, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .header p {
+      color: #94a3b8;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+    .diagram {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .row {
+      display: grid;
+      gap: 20px;
+    }
+    .row-external { grid-template-columns: 1fr 1fr 1fr 1fr; }
+    .row-backend { grid-template-columns: 1fr; }
+    .row-frontend { grid-template-columns: 1fr; }
+
+    .card {
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+
+    /* Splunk */
+    .splunk { background: #1a2e1a; border: 1px solid #2d5a2d; }
+    .splunk::before { background: linear-gradient(90deg, #65a637, #8bc34a); }
+    .splunk .card-title { color: #8bc34a; }
+    .splunk .icon { background: #65a637; color: white; }
+
+    /* CDTSM */
+    .cdtsm { background: #1a2a3a; border: 1px solid #2d5a7a; }
+    .cdtsm::before { background: linear-gradient(90deg, #049fd9, #00bcd4); }
+    .cdtsm .card-title { color: #4fc3f7; }
+    .cdtsm .icon { background: #049fd9; color: white; }
+
+    /* Gemini */
+    .gemini { background: #2a1a3a; border: 1px solid #5a2d7a; }
+    .gemini::before { background: linear-gradient(90deg, #8e44ad, #ab47bc); }
+    .gemini .card-title { color: #ce93d8; }
+    .gemini .icon { background: #8e44ad; color: white; }
+
+    /* GitHub */
+    .github { background: #1a1a2a; border: 1px solid #3a3a5a; }
+    .github::before { background: linear-gradient(90deg, #6e7681, #ffffff); }
+    .github .card-title { color: #b0b8c4; }
+    .github .icon { background: #24292e; color: white; }
+
+    /* Backend */
+    .backend { background: #141e2e; border: 1px solid #1e3a5a; }
+    .backend::before { background: linear-gradient(90deg, #00d4aa, #10b981); }
+    .backend .card-title { color: #00d4aa; }
+
+    /* Frontend */
+    .frontend { background: #1a1428; border: 1px solid #3a2d5a; }
+    .frontend::before { background: linear-gradient(90deg, #7c3aed, #a855f7); }
+    .frontend .card-title { color: #a855f7; }
+
+    .items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .item {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      color: #cbd5e1;
+    }
+
+    .backend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .backend-section {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .backend-section h4 {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #64748b;
+      margin-bottom: 10px;
+    }
+    .agent-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      font-size: 12px;
+    }
+    .agent-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Arrows section */
+    .flow-section {
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .flow-section h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 24px;
+    }
+    .flows {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .flow-card {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .flow-card h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .flow-card .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .flow-steps {
+      list-style: none;
+    }
+    .flow-steps li {
+      padding: 6px 0;
+      font-size: 12px;
+      color: #94a3b8;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .flow-steps li:last-child { border-bottom: none; }
+    .step-num {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Flow colors */
+    .flow-splunk h3 { color: #8bc34a; }
+    .flow-splunk .badge { background: #2d5a2d; color: #8bc34a; }
+    .flow-splunk .step-num { background: #2d5a2d; color: #8bc34a; }
+
+    .flow-cdtsm h3 { color: #4fc3f7; }
+    .flow-cdtsm .badge { background: #1a3a4a; color: #4fc3f7; }
+    .flow-cdtsm .step-num { background: #1a3a4a; color: #4fc3f7; }
+
+    .flow-gemini h3 { color: #ce93d8; }
+    .flow-gemini .badge { background: #3a1a4a; color: #ce93d8; }
+    .flow-gemini .step-num { background: #3a1a4a; color: #ce93d8; }
+
+    .flow-github h3 { color: #b0b8c4; }
+    .flow-github .badge { background: #2a2a3a; color: #b0b8c4; }
+    .flow-github .step-num { background: #2a2a3a; color: #b0b8c4; }
+
+    /* Connection lines SVG */
+    .connections {
+      position: relative;
+      height: 60px;
+      margin: -10px 0;
+    }
+    .connections svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Legend */
+    .legend {
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* Arrow indicators between sections */
+    .arrow-row {
+      display: flex;
+      justify-content: center;
+      gap: 80px;
+      padding: 12px 0;
+    }
+    .arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .arrow-line {
+      width: 2px;
+      height: 20px;
+      border-radius: 1px;
+    }
+    .arrow-head {
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+    }
+    .arrow-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Splunk detail table */
+    .splunk-table {
+      width: 100%;
+      margin-top: 32px;
+      border-collapse: collapse;
+    }
+    .splunk-table th {
+      text-align: left;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #8bc34a;
+      padding: 8px 12px;
+      border-bottom: 2px solid #2d5a2d;
+    }
+    .splunk-table td {
+      padding: 10px 12px;
+      font-size: 12px;
+      color: #cbd5e1;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .splunk-table td:first-child {
+      font-family: 'JetBrains Mono', monospace;
+      color: #8bc34a;
+      font-weight: 600;
+    }
+    .splunk-table tr:hover td {
+      background: rgba(101, 166, 55, 0.05);
+    }
+
+    @media print {
+      body { background: white; color: #1a1a1a; padding: 20px; }
+      .page { box-shadow: none; background: white; border: 1px solid #e2e8f0; }
+      .card { border-color: #e2e8f0; }
+      .item { border-color: #e2e8f0; color: #374151; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <div class="header">
+      <h1>PRISM — AI Reliability Engineering Platform</h1>
+      <p>Architecture Overview • Splunk Integration • Cisco CDTSM Predictions • Gemini AI Agents</p>
+    </div>
+
+    <div class="diagram">
+      <!-- External Services Row -->
+      <div class="row row-external">
+        <!-- Splunk -->
+        <div class="card splunk">
+          <div class="card-title">
+            <span class="icon">S</span>
+            Splunk Enterprise
+          </div>
+          <div style="font-size:10px; color:#64748b; margin-bottom:10px;">localhost:8089 · REST API + MCP</div>
+          <div class="items">
+            <span class="item" style="border-color:#2d5a2d;">index=incidents</span>
+            <span class="item" style="border-color:#2d5a2d;">index=main</span>
+            <span class="item" style="border-color:#2d5a2d;">index=deployments</span>
+            <span class="item" style="border-color:#2d5a2d;">index=metrics</span>
+          </div>
+        </div>
+
+        <!-- CDTSM -->
+        <div class="card cdtsm">
+          <div class="card-title">
+            <span class="icon">C</span>
+            Cisco CDTSM
+          </div>
+          <div style="font-size:10px; color:#64748b; margin-bottom:10px;">localhost:8080 · Inference Host</div>
+          <div class="items">
+            <span class="item" style="border-color:#2d5a7a;">/cdtsm/v1/ai/infer</span>
+            <span class="item" style="border-color:#2d5a7a;">/ready</span>
+          </div>
+        </div>
+
+        <!-- Gemini -->
+        <div class="card gemini">
+          <div class="card-title">
+            <span class="icon">G</span>
+            Google Gemini AI
+          </div>
+          <div style="font-size:10px; color:#64748b; margin-bottom:10px;">gemini-2.5-flash-lite</div>
+          <div class="items">
+            <span class="item" style="border-color:#5a2d7a;">queryGemini()</span>
+            <span class="item" style="border-color:#5a2d7a;">queryGeminiJSON()</span>
+          </div>
+        </div>
+
+        <!-- GitHub -->
+        <div class="card github">
+          <div class="card-title">
+            <span class="icon">G</span>
+            GitHub API
+          </div>
+          <div style="font-size:10px; color:#64748b; margin-bottom:10px;">RapsCameUp org · Fine-grained PAT</div>
+          <div class="items">
+            <span class="item" style="border-color:#3a3a5a;">PRs</span>
+            <span class="item" style="border-color:#3a3a5a;">Issues</span>
+            <span class="item" style="border-color:#3a3a5a;">Branches</span>
+            <span class="item" style="border-color:#3a3a5a;">Diffs</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow indicators -->
+      <div class="arrow-row">
+        <div class="arrow">
+          <div class="arrow-line" style="background:#65a637;"></div>
+          <div class="arrow-head" style="border-top:6px solid #65a637;"></div>
+          <div class="arrow-label">SPL queries</div>
+        </div>
+        <div class="arrow">
+          <div class="arrow-line" style="background:#049fd9;"></div>
+          <div class="arrow-head" style="border-top:6px solid #049fd9;"></div>
+          <div class="arrow-label">Inference</div>
+        </div>
+        <div class="arrow">
+          <div class="arrow-line" style="background:#8e44ad;"></div>
+          <div class="arrow-head" style="border-top:6px solid #8e44ad;"></div>
+          <div class="arrow-label">Prompts</div>
+        </div>
+        <div class="arrow">
+          <div class="arrow-line" style="background:#6e7681;"></div>
+          <div class="arrow-head" style="border-top:6px solid #6e7681;"></div>
+          <div class="arrow-label">REST API</div>
+        </div>
+      </div>
+
+      <!-- Backend -->
+      <div class="row row-backend">
+        <div class="card backend">
+          <div class="card-title">
+            <span style="font-size:16px;">⚙️</span>
+            PRISM Backend — Fastify v5 · TypeScript · Port 5000
+          </div>
+          <div class="backend-grid">
+            <!-- Integration Layer -->
+            <div class="backend-section">
+              <h4>Integration Layer</h4>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#65a637;"></div>
+                <span>SplunkService (REST + MCP)</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#049fd9;"></div>
+                <span>CDTSMClient (Inference)</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#8e44ad;"></div>
+                <span>GeminiClient (LLM)</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#6e7681;"></div>
+                <span>GitHubService (API)</span>
+              </div>
+            </div>
+
+            <!-- AI Agents -->
+            <div class="backend-section">
+              <h4>AI Agent Ecosystem</h4>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#a855f7;"></div>
+                <span>Coordinator Agent</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#3b82f6;"></div>
+                <span>Telemetry Agent → Splunk</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#f97316;"></div>
+                <span>Deployment Agent → Splunk</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#eab308;"></div>
+                <span>Root Cause Agent → Gemini</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#06b6d4;"></div>
+                <span>PR Traceback Agent → GitHub</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#10b981;"></div>
+                <span>Remediation Agent → Gemini</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#049fd9;"></div>
+                <span style="font-weight:600;">Predictive Agent → CDTSM</span>
+              </div>
+            </div>
+
+            <!-- Services & Storage -->
+            <div class="backend-section">
+              <h4>Services & Storage</h4>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#00d4aa;"></div>
+                <span>Incident Service</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#00d4aa;"></div>
+                <span>Investigation Service</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#00d4aa;"></div>
+                <span>Remediation Service</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#f59e0b;"></div>
+                <span>MongoDB Atlas (Prisma)</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#ef4444;"></div>
+                <span>Socket.IO (Real-time)</span>
+              </div>
+              <div class="agent-item">
+                <div class="agent-dot" style="background:#64748b;"></div>
+                <span>Prediction Scheduler (2 min)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Arrow to Frontend -->
+      <div class="arrow-row">
+        <div class="arrow">
+          <div class="arrow-line" style="background:#7c3aed;"></div>
+          <div class="arrow-head" style="border-top:6px solid #7c3aed;"></div>
+          <div class="arrow-label">REST + WebSocket</div>
+        </div>
+      </div>
+
+      <!-- Frontend -->
+      <div class="row row-frontend">
+        <div class="card frontend">
+          <div class="card-title">
+            <span style="font-size:16px;">🖥️</span>
+            PRISM Frontend — React 19 · Vite 7 · Port 5173
+          </div>
+          <div class="items" style="margin-top:8px;">
+            <span class="item" style="border-color:#5a2d7a;">Command Center</span>
+            <span class="item" style="border-color:#5a2d7a;">Incident Registry</span>
+            <span class="item" style="border-color:#5a2d7a;">AI Investigation View</span>
+            <span class="item" style="border-color:#5a2d7a;">Predicted Incidents (CDTSM)</span>
+            <span class="item" style="border-color:#5a2d7a;">Remediation Center</span>
+            <span class="item" style="border-color:#5a2d7a;">Ask AI (Gemini Chat)</span>
+            <span class="item" style="border-color:#5a2d7a;">PR Diff Viewer</span>
+            <span class="item" style="border-color:#5a2d7a;">Service Dep Graph</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Flows -->
+    <div class="flow-section">
+      <h2>Data Flow Pipelines</h2>
+      <div class="flows">
+        <!-- Splunk Flow -->
+        <div class="flow-card flow-splunk">
+          <h3>
+            <span class="badge">PRIMARY</span>
+            Splunk → Incident Detection & Telemetry
+          </h3>
+          <ol class="flow-steps">
+            <li><span class="step-num">1</span>CSV data uploaded to 4 Splunk indexes (incidents, main, deployments, metrics)</li>
+            <li><span class="step-num">2</span>SplunkService sends SPL queries via REST API POST to /services/search/jobs/export</li>
+            <li><span class="step-num">3</span>Parses newline-delimited JSON response (extracted fields or _raw CSV fallback)</li>
+            <li><span class="step-num">4</span>Incident Service merges Splunk-detected + DB-predicted incidents</li>
+            <li><span class="step-num">5</span>Telemetry Agent queries error logs & patterns during investigation</li>
+            <li><span class="step-num">6</span>Deployment Agent fetches CI/CD events for correlation analysis</li>
+          </ol>
+        </div>
+
+        <!-- CDTSM Flow -->
+        <div class="flow-card flow-cdtsm">
+          <h3>
+            <span class="badge">PREDICTION</span>
+            Splunk Metrics → CDTSM → Predicted Incidents
+          </h3>
+          <ol class="flow-steps">
+            <li><span class="step-num">1</span>Scheduler triggers Predictive Agent every 2 minutes</li>
+            <li><span class="step-num">2</span>Agent fetches 5 metrics per service from Splunk (memory, CPU, latency, error rate, request rate)</li>
+            <li><span class="step-num">3</span>Splits time series into coarse_ctx (trend) + fine_ctx (recent high-res)</li>
+            <li><span class="step-num">4</span>POST to CDTSM /cdtsm/v1/ai/infer with horizon=6, quantiles=[p10,p50,p90]</li>
+            <li><span class="step-num">5</span>Computes anomaly score: trend_acceleration × 50 + p90_divergence × 30 + 20</li>
+            <li><span class="step-num">6</span>If score ≥ 70: creates predicted incident (source: cdtsm-prediction)</li>
+          </ol>
+        </div>
+
+        <!-- Gemini Flow -->
+        <div class="flow-card flow-gemini">
+          <h3>
+            <span class="badge">AI</span>
+            Gemini AI — Multi-Agent Investigation
+          </h3>
+          <ol class="flow-steps">
+            <li><span class="step-num">1</span>Coordinator dispatches 5 specialized agents sequentially</li>
+            <li><span class="step-num">2</span>Telemetry Agent sends Splunk error patterns → Gemini identifies anomalies</li>
+            <li><span class="step-num">3</span>Deployment Agent sends timeline → Gemini calculates correlation score</li>
+            <li><span class="step-num">4</span>Root Cause Agent synthesizes all findings → Gemini produces diagnosis</li>
+            <li><span class="step-num">5</span>Remediation Agent → Gemini recommends prioritized actions</li>
+            <li><span class="step-num">6</span>Ask AI endpoint provides contextual Q&A with full incident context</li>
+          </ol>
+        </div>
+
+        <!-- GitHub Flow -->
+        <div class="flow-card flow-github">
+          <h3>
+            <span class="badge">AUTOMATION</span>
+            GitHub — PR Traceback & Auto-Remediation
+          </h3>
+          <ol class="flow-steps">
+            <li><span class="step-num">1</span>PR Traceback Agent fetches suspected PR metadata + diff from GitHub</li>
+            <li><span class="step-num">2</span>Gemini analyzes code changes to determine risk score</li>
+            <li><span class="step-num">3</span>Investigation Service auto-creates GitHub Issue for critical incidents</li>
+            <li><span class="step-num">4</span>Remediation Service: create branch → commit fix → open PR</li>
+            <li><span class="step-num">5</span>Assigns reviewers (repo owner + rrabelani7)</li>
+            <li><span class="step-num">6</span>Human engineer reviews and approves (never auto-merges)</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <!-- Splunk Index Detail -->
+    <div class="flow-section">
+      <h2>Splunk Index Schema</h2>
+      <table class="splunk-table">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>Purpose</th>
+            <th>Key Fields</th>
+            <th>Used By</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>index=incidents</td>
+            <td>Detected production incidents</td>
+            <td>id, title, description, severity, serviceName, status, confidenceScore, detectedAt</td>
+            <td>Incident Service, Coordinator</td>
+          </tr>
+          <tr>
+            <td>index=main</td>
+            <td>Application error/warn/info logs</td>
+            <td>_time, serviceName, level, source, message, host, region</td>
+            <td>Telemetry Agent, Investigation</td>
+          </tr>
+          <tr>
+            <td>index=deployments</td>
+            <td>CI/CD deployment events</td>
+            <td>_time, serviceName, version, commitSha, prNumber, environment, status, changedFiles</td>
+            <td>Deployment Agent, PR Traceback</td>
+          </tr>
+          <tr>
+            <td>index=metrics</td>
+            <td>Service performance time series</td>
+            <td>_time, serviceName, metric, value, host, region</td>
+            <td>Predictive Agent → CDTSM</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background:#65a637;"></div>
+        Splunk (Observability)
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background:#049fd9;"></div>
+        Cisco CDTSM (Prediction)
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background:#8e44ad;"></div>
+        Google Gemini (AI/LLM)
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background:#24292e; border:1px solid #6e7681;"></div>
+        GitHub (Automation)
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background:#00d4aa;"></div>
+        PRISM Backend
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background:#7c3aed;"></div>
+        PRISM Frontend
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:32px; font-size:11px; color:#475569;">
+      PRISM AI Reliability Platform • Cisco + Splunk Integration • Architecture v1.0
+    </div>
+  </div>
+</body>
+</html>

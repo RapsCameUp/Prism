@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+}
+
+model Repository {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  serviceName   String   @unique
+  githubUrl     String
+  defaultBranch String   @default("main")
+  environment   String   @default("production")
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model Incident {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  title                String
+  description          String
+  severity             String
+  serviceName          String
+  status               String   @default("open")
+  confidenceScore      Float?
+  githubIssueUrl       String?
+  source               String?  // "cdtsm-prediction" for AI-predicted incidents, null for detected
+  predictedAt          DateTime?
+  failureWindowMinutes Int?
+  detectedAt           DateTime @default(now())
+  createdAt            DateTime @default(now())
+}
+
+model Investigation {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  incidentId       String
+  summary          String
+  rootCause        String
+  suspectedPrNumber Int?
+  suspectedPrUrl   String?
+  confidenceScore  Float
+  metadata         Json?
+  createdAt        DateTime @default(now())
+}
+
+model Remediation {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  incidentId String
+  branchName String
+  prUrl      String?
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+}

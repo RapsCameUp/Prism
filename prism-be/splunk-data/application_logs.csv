@@ -1,0 +1,26 @@
+_time,serviceName,level,source,message,host,region
+2026-06-08T10:15:00Z,checkout-service,ERROR,application,Connection pool exhausted: max 50 connections reached,checkout-pod-1,us-east-1
+2026-06-08T10:14:30Z,checkout-service,ERROR,application,Transaction deadlock detected in order creation,checkout-pod-2,us-east-1
+2026-06-08T10:14:00Z,checkout-service,ERROR,application,Redis cache invalidation failure - stale keys accumulating,checkout-pod-1,us-east-1
+2026-06-08T10:13:15Z,checkout-service,WARN,application,Memory usage at 89% on checkout-pod-1,checkout-pod-1,us-east-1
+2026-06-08T10:12:45Z,payment-service,ERROR,application,Payment gateway timeout after 30000ms - circuit breaker OPEN,payment-pod-1,us-east-1
+2026-06-08T10:12:00Z,payment-service,ERROR,application,Stripe webhook signature verification failed,payment-pod-2,us-east-1
+2026-06-08T10:11:30Z,payment-service,ERROR,application,Connection pool exhausted: max 50 connections reached,payment-pod-1,us-east-1
+2026-06-08T10:11:00Z,payment-service,WARN,application,Retry attempt 3/5 for transaction txn_9f8e7d6c,payment-pod-1,us-east-1
+2026-06-08T10:10:30Z,auth-service,ERROR,application,JWT token validation failed: signature mismatch,auth-pod-1,us-east-1
+2026-06-08T10:10:00Z,auth-service,ERROR,application,Redis session store connection timeout after 5000ms,auth-pod-2,us-east-1
+2026-06-08T10:09:30Z,auth-service,ERROR,application,Rate limiter exceeded for IP range 10.0.x.x,auth-pod-1,us-east-1
+2026-06-08T10:09:00Z,auth-service,WARN,application,Key rotation detected but downstream propagation incomplete,auth-pod-1,us-east-1
+2026-06-08T10:08:30Z,inventory-service,ERROR,application,Optimistic lock conflict on SKU reservation - 15 retries exhausted,inventory-pod-1,us-east-1
+2026-06-08T10:08:00Z,inventory-service,ERROR,application,Database connection pool exhausted - 0 available connections,inventory-pod-2,us-east-1
+2026-06-08T10:07:30Z,inventory-service,ERROR,application,Cache invalidation storm detected - fallback to direct DB reads,inventory-pod-1,us-west-2
+2026-06-08T10:07:00Z,inventory-service,WARN,application,Write latency exceeded 2000ms for collection reservations,inventory-pod-1,us-west-2
+2026-06-08T10:06:30Z,notification-service,ERROR,application,Kafka consumer lag exceeding threshold: 5000 messages behind,notification-pod-1,us-east-1
+2026-06-08T10:06:00Z,notification-service,ERROR,application,SMTP relay connection refused - email delivery failing,notification-pod-2,us-east-1
+2026-06-08T10:05:30Z,notification-service,ERROR,application,Template rendering error: undefined variable userName,notification-pod-1,us-east-1
+2026-06-08T10:05:00Z,notification-service,WARN,application,Pod memory at 92% - eviction imminent,notification-pod-1,us-east-1
+2026-06-08T10:04:30Z,checkout-service,ERROR,application,Inventory reservation timeout - downstream service unavailable,checkout-pod-3,us-west-2
+2026-06-08T10:04:00Z,checkout-service,ERROR,application,Cart session expired during checkout flow,checkout-pod-1,us-west-2
+2026-06-08T10:03:30Z,payment-service,ERROR,application,Database query timeout: SELECT on transactions exceeded 30s,payment-pod-2,us-west-2
+2026-06-08T10:03:00Z,payment-service,ERROR,application,Connection pool exhausted: max 50 connections reached,payment-pod-1,us-east-1
+2026-06-08T10:02:30Z,auth-service,ERROR,application,Token refresh endpoint returning 503,auth-pod-2,us-east-1

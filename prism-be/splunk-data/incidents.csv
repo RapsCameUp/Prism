@@ -1,0 +1,11 @@
+_time,id,title,description,severity,serviceName,status,confidenceScore,detectedAt
+2026-06-08T10:15:00Z,INC001,Redis Memory Leak,Redis memory usage growing unbounded in checkout-service causing OOM kills,critical,checkout-service,open,92,2026-06-08T09:15:00Z
+2026-06-08T10:10:00Z,INC002,Authentication Failure Cascade,Auth tokens failing to validate causing cascading 401 errors across services,critical,auth-service,open,88,2026-06-08T08:00:00Z
+2026-06-08T10:03:00Z,INC003,API Timeout Spike,Payment processing endpoints timing out at 30s affecting 15% of transactions,high,payment-service,investigating,76,2026-06-08T05:45:00Z
+2026-06-08T10:06:00Z,INC004,Kubernetes Node Saturation,Worker nodes at 95% CPU with pods being evicted and notification delays increasing,high,notification-service,open,81,2026-06-08T04:00:00Z
+2026-06-08T10:08:00Z,INC005,Database Connection Pool Exhaustion,MongoDB connection pool saturated in inventory-service causing write failures,high,inventory-service,open,85,2026-06-07T22:00:00Z
+2026-06-08T09:00:00Z,INC006,Rate Limiter Misconfiguration,Rate limiter dropping legitimate traffic after config change in checkout-service,medium,checkout-service,resolved,94,2026-06-07T18:00:00Z
+2026-06-07T12:00:00Z,INC007,SSL Certificate Expiry Warning,Payment service SSL certificate expiring in 7 days needs rotation,medium,payment-service,open,99,2026-06-07T00:00:00Z
+2026-06-08T06:00:00Z,INC008,Message Queue Backlog,RabbitMQ queue depth exceeding threshold for notification-service consumers,medium,notification-service,investigating,72,2026-06-07T12:00:00Z
+2026-06-06T12:00:00Z,INC009,Disk Space Alert,Log volume consuming 85% disk on inventory-service nodes,low,inventory-service,open,97,2026-06-06T00:00:00Z
+2026-06-05T12:00:00Z,INC010,Deprecated API Usage,Auth service still using deprecated OAuth endpoint migration needed,low,auth-service,open,100,2026-06-05T00:00:00Z

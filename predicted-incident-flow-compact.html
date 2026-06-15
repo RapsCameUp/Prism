@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PRISM — Predicted Incident Full Lifecycle</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #080c14 0%, #0d1117 100%);
+      color: #e6edf3;
+      padding: 56px 40px;
+      min-height: 100vh;
+    }
+    .page { max-width: 1000px; margin: 0 auto; }
+
+    .header {
+      text-align: center;
+      margin-bottom: 56px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid #21262d;
+    }
+    .header-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #049fd9;
+      background: rgba(4,159,217,0.08);
+      border: 1px solid rgba(4,159,217,0.2);
+      padding: 6px 16px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+    .header h1 .accent { color: #049fd9; }
+    .header p {
+      color: #8b949e;
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .phase { margin-bottom: 48px; }
+    .phase-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #21262d;
+    }
+    .phase-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .phase-title { font-size: 18px; font-weight: 700; }
+    .phase-sub {
+      font-size: 11px;
+      color: #8b949e;
+      margin-left: auto;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 2px; }
+    .step-row {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 16px;
+    }
+    .step-indicator { display: flex; flex-direction: column; align-items: center; }
+    .step-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      border: 2px solid;
+      flex-shrink: 0;
+      z-index: 2;
+    }
+    .step-connector { width: 2px; flex: 1; min-height: 8px; opacity: 0.5; }
+
+    .card {
+      border-radius: 12px;
+      border: 1px solid;
+      padding: 16px 20px;
+      margin-bottom: 10px;
+      backdrop-filter: blur(8px);
+    }
+    .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .card-title { font-size: 13px; font-weight: 700; }
+    .card-tag {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .card-body {
+      font-size: 12px;
+      color: #8b949e;
+      line-height: 1.6;
+    }
+    .card-body strong { color: #c9d1d9; }
+    .card-body code {
+      background: rgba(0,0,0,0.3);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 11px;
+      color: #79c0ff;
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip {
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid;
+    }
+
+    .phase-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 0 8px 54px;
+      gap: 10px;
+    }
+    .phase-arrow-line { width: 2px; height: 24px; border-radius: 1px; }
+    .phase-arrow-label { font-size: 10px; font-weight: 600; letter-spacing: 0.3px; }
+
+    /* Color themes */
+    .c-scheduler .step-dot { background: #12121e; border-color: #6366f1; color: #a5b4fc; }
+    .c-scheduler .step-connector { background: #6366f1; }
+    .c-scheduler .card { background: rgba(99,102,241,0.04); border-color: rgba(99,102,241,0.2); }
+    .c-scheduler .card-title { color: #a5b4fc; }
+
+    .c-splunk .step-dot { background: #0f1f0f; border-color: #65a637; color: #8bc34a; }
+    .c-splunk .step-connector { background: #65a637; }
+    .c-splunk .card { background: rgba(101,166,55,0.04); border-color: rgba(101,166,55,0.2); }
+    .c-splunk .card-title { color: #8bc34a; }
+    .c-splunk .card-tag { background: rgba(101,166,55,0.12); color: #8bc34a; border: 1px solid rgba(101,166,55,0.3); }
+
+    .c-cdtsm .step-dot { background: #081520; border-color: #049fd9; color: #4fc3f7; }
+    .c-cdtsm .step-connector { background: #049fd9; }
+    .c-cdtsm .card { background: rgba(4,159,217,0.04); border-color: rgba(4,159,217,0.2); }
+    .c-cdtsm .card-title { color: #4fc3f7; }
+    .c-cdtsm .card-tag { background: rgba(4,159,217,0.12); color: #4fc3f7; border: 1px solid rgba(4,159,217,0.3); }
+
+    .c-scoring .step-dot { background: #130a20; border-color: #a855f7; color: #c084fc; }
+    .c-scoring .step-connector { background: #a855f7; }
+    .c-scoring .card { background: rgba(168,85,247,0.04); border-color: rgba(168,85,247,0.2); }
+    .c-scoring .card-title { color: #c084fc; }
+
+    .c-incident .step-dot { background: #1a0808; border-color: #ef4444; color: #fca5a5; }
+    .c-incident .step-connector { background: #ef4444; }
+    .c-incident .card { background: rgba(239,68,68,0.04); border-color: rgba(239,68,68,0.2); }
+    .c-incident .card-title { color: #fca5a5; }
+    .c-incident .card-tag { background: rgba(239,68,68,0.12); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+
+    .c-agent .step-dot { background: #1a0a2a; border-color: #e94560; color: #f9a8d4; }
+    .c-agent .step-connector { background: #e94560; }
+    .c-agent .card { background: rgba(233,69,96,0.04); border-color: rgba(233,69,96,0.2); }
+    .c-agent .card-title { color: #f9a8d4; }
+    .c-agent .card-tag { background: rgba(233,69,96,0.12); color: #f9a8d4; border: 1px solid rgba(233,69,96,0.3); }
+
+    .c-gemini .step-dot { background: #1a0a2a; border-color: #a855f7; color: #c084fc; }
+    .c-gemini .step-connector { background: #a855f7; }
+    .c-gemini .card { background: rgba(168,85,247,0.04); border-color: rgba(168,85,247,0.2); }
+    .c-gemini .card-title { color: #c084fc; }
+    .c-gemini .card-tag { background: rgba(168,85,247,0.12); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+
+    .c-github .step-dot { background: #121208; border-color: #f0883e; color: #f0883e; }
+    .c-github .step-connector { background: #f0883e; }
+    .c-github .card { background: rgba(240,136,62,0.04); border-color: rgba(240,136,62,0.2); }
+    .c-github .card-title { color: #f0883e; }
+    .c-github .card-tag { background: rgba(240,136,62,0.12); color: #f0883e; border: 1px solid rgba(240,136,62,0.3); }
+
+    .c-output .step-dot { background: #081a16; border-color: #00d4aa; color: #00d4aa; }
+    .c-output .step-connector { background: #00d4aa; }
+    .c-output .card { background: rgba(0,212,170,0.04); border-color: rgba(0,212,170,0.2); }
+    .c-output .card-title { color: #00d4aa; }
+
+    .pi-predict { background: rgba(4,159,217,0.12); color: #4fc3f7; border: 1px solid rgba(4,159,217,0.3); }
+    .pi-investigate { background: rgba(233,69,96,0.12); color: #f9a8d4; border: 1px solid rgba(233,69,96,0.3); }
+    .pi-remediate { background: rgba(240,136,62,0.12); color: #f0883e; border: 1px solid rgba(240,136,62,0.3); }
+
+    .footer {
+      text-align: center;
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid #21262d;
+    }
+    .footer-legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .footer-legend span {
+      font-size: 11px;
+      color: #8b949e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .footer-legend .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .footer-text { font-size: 11px; color: #4b5563; margin-top: 8px; }
+
+    @media print {
+      body { background: white; color: #1f2328; }
+      .card { background: #f6f8fa !important; border-color: #d1d9e0 !important; }
+      .card-body { color: #1f2328; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-badge">PRISM AI Reliability Platform</div>
+      <div style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:#6b7280; margin-bottom:8px;">The Problem</div>
+      <p style="color:#e6edf3; font-size:20px; font-weight:700; line-height:1.4; margin-bottom:16px; max-width:700px;">Production incidents cost companies millions — teams are reactive, spending hours diagnosing issues that could have been prevented. PRISM solves this by predicting failures before they happen.</p>
+      <p>PRISM (Predictive Reliability Intelligence &amp; Service Management) combines Splunk observability data via the MCP Server, Cisco CDTSM predictions, and Google Gemini AI to detect, investigate, and remediate production incidents autonomously — ingesting real-time telemetry, running predictive anomaly detection, orchestrating multi-agent investigations, and generating automated GitHub PRs with human-in-the-loop approval.</p>
+    </div>
+
+    <!-- ══════════════ PHASE 1: PREDICTION ══════════════ -->
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-icon pi-predict">⚡</div>
+        <div class="phase-title">Phase 1 — Predictive Detection</div>
+        <div class="phase-sub">Automated</div>
+      </div>
+
+      <div class="steps">
+        <!-- Step 1 -->
+        <div class="step-row c-scheduler">
+          <div class="step-indicator">
+            <div class="step-dot">1</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Prediction Scheduler Fires</div>
+            </div>
+            <div class="card-body">
+              Health-checks CDTSM, then loads all active services for prediction.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-row c-splunk">
+          <div class="step-indicator">
+            <div class="step-dot">2</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Fetch Metrics from Splunk MCP</div>
+              <span class="card-tag c-splunk">MCP Protocol</span>
+            </div>
+            <div class="card-body">
+              Queries <strong>5 metrics × 24 data points</strong> per service via Model Context Protocol.
+            </div>
+            <div class="chips">
+              <span class="chip" style="background:rgba(101,166,55,0.08); color:#8bc34a; border-color:rgba(101,166,55,0.25);">memory_percent</span>
+              <span class="chip" style="background:rgba(101,166,55,0.08); color:#8bc34a; border-color:rgba(101,166,55,0.25);">cpu_percent</span>
+              <span class="chip" style="background:rgba(101,166,55,0.08); color:#8bc34a; border-color:rgba(101,166,55,0.25);">latency_ms</span>
+              <span class="chip" style="background:rgba(101,166,55,0.08); color:#8bc34a; border-color:rgba(101,166,55,0.25);">error_rate</span>
+              <span class="chip" style="background:rgba(101,166,55,0.08); color:#8bc34a; border-color:rgba(101,166,55,0.25);">request_rate</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-row c-cdtsm">
+          <div class="step-indicator">
+            <div class="step-dot">3</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Cisco CDTSM Inference</div>
+              <span class="card-tag c-cdtsm">Deep Time Series Model</span>
+            </div>
+            <div class="card-body">
+              Time series split into <strong>coarse + fine context</strong>. CDTSM returns 6-step forecast with p10/p50/p90 quantiles.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-row c-scoring">
+          <div class="step-indicator">
+            <div class="step-dot">4</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Anomaly Scoring &amp; Severity</div>
+            </div>
+            <div class="card-body">
+              Scored via trend acceleration + p90 divergence. <strong>Critical ≥ 85</strong> · High ≥ 70 · Medium ≥ 50. Failure window = step × 5 min.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="step-row c-incident">
+          <div class="step-indicator">
+            <div class="step-dot">5</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Create Predicted Incident</div>
+              <span class="card-tag c-incident">AI-PREDICTED</span>
+            </div>
+            <div class="card-body">
+              If score ≥ 70: incident created with confidence, failure window, and metric breakdown. Critical → auto-creates GitHub Issue.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase transition arrow -->
+    <div class="phase-arrow">
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <div class="phase-arrow-line" style="background:#e94560;"></div>
+        <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #e94560;"></div>
+      </div>
+      <div class="phase-arrow-label" style="color:#f9a8d4;">User clicks "Investigate"</div>
+    </div>
+
+    <!-- ══════════════ PHASE 2: INVESTIGATION ══════════════ -->
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-icon pi-investigate">🔍</div>
+        <div class="phase-title">Phase 2 — Multi-Agent Investigation</div>
+        <div class="phase-sub">SSE Streaming · 5 Agents</div>
+      </div>
+
+      <div class="steps">
+        <!-- Step 6 -->
+        <div class="step-row c-agent">
+          <div class="step-indicator">
+            <div class="step-dot">6</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Coordinator Dispatches Agents</div>
+              <span class="card-tag c-agent">Orchestrator</span>
+            </div>
+            <div class="card-body">
+              Streams real-time progress via <strong>SSE</strong>. Orchestrates 5 specialized agents sequentially.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="step-row c-splunk">
+          <div class="step-indicator">
+            <div class="step-dot">7</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">① Telemetry Agent</div>
+            </div>
+            <div class="card-body">
+              Queries Splunk MCP for error logs, traces, and metrics. Gemini identifies anomaly patterns.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 8 -->
+        <div class="step-row c-splunk">
+          <div class="step-indicator">
+            <div class="step-dot">8</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">② Deployment Agent</div>
+            </div>
+            <div class="card-body">
+              Fetches recent deploys from Splunk. Gemini calculates correlation score with error onset.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 9 -->
+        <div class="step-row c-gemini">
+          <div class="step-indicator">
+            <div class="step-dot">9</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">③ Root Cause Agent</div>
+              <span class="card-tag c-gemini">Gemini AI</span>
+            </div>
+            <div class="card-body">
+              Synthesizes telemetry + deployment data. Returns root cause, confidence, and contributing factors.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 10 -->
+        <div class="step-row c-github">
+          <div class="step-indicator">
+            <div class="step-dot">10</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">④ PR Traceback Agent</div>
+            </div>
+            <div class="card-body">
+              Fetches suspected PR diff from GitHub. Gemini assesses risk score (0–100) linking changes to root cause.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 11 -->
+        <div class="step-row c-gemini">
+          <div class="step-indicator">
+            <div class="step-dot">11</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">⑤ Remediation Agent</div>
+              <span class="card-tag c-gemini">Gemini AI</span>
+            </div>
+            <div class="card-body">
+              Generates prioritized action plan with rollback recommendation and prevention measures.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 12 -->
+        <div class="step-row c-output">
+          <div class="step-indicator">
+            <div class="step-dot">12</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Investigation Complete</div>
+            </div>
+            <div class="card-body">
+              Full results persisted to MongoDB. Overall confidence = weighted scores from root cause, deployment, and PR analysis.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase transition arrow -->
+    <div class="phase-arrow">
+      <div style="display:flex; flex-direction:column; align-items:center;">
+        <div class="phase-arrow-line" style="background:#f0883e;"></div>
+        <div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #f0883e;"></div>
+      </div>
+      <div class="phase-arrow-label" style="color:#f0883e;">User clicks "Create Remediation PR"</div>
+    </div>
+
+    <!-- ══════════════ PHASE 3: REMEDIATION PR ══════════════ -->
+    <div class="phase">
+      <div class="phase-header">
+        <div class="phase-icon pi-remediate">🔧</div>
+        <div class="phase-title">Phase 3 — Automated Remediation PR</div>
+        <div class="phase-sub">GitHub API</div>
+      </div>
+
+      <div class="steps">
+        <!-- Step 13 -->
+        <div class="step-row c-gemini">
+          <div class="step-indicator">
+            <div class="step-dot">13</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Generate Fix Code</div>
+              <span class="card-tag c-gemini">AI-Generated</span>
+            </div>
+            <div class="card-body">
+              Produces corrected source files based on root cause analysis and the identified problematic code.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 14 -->
+        <div class="step-row c-github">
+          <div class="step-indicator">
+            <div class="step-dot">14</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Create Branch &amp; Push</div>
+              <span class="card-tag c-github">GitHub API</span>
+            </div>
+            <div class="card-body">
+              Creates <code>fix/...</code> branch from <code>main</code>, pushes fixed files as commits.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 15 -->
+        <div class="step-row c-github">
+          <div class="step-indicator">
+            <div class="step-dot">15</div>
+            <div class="step-connector"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Open Pull Request</div>
+              <span class="card-tag c-github">Automated PR</span>
+            </div>
+            <div class="card-body">
+              PR created with incident context, root cause, before/after code, and testing notes.
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 16 -->
+        <div class="step-row c-output">
+          <div class="step-indicator">
+            <div class="step-dot">16</div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Resolution Complete</div>
+            </div>
+            <div class="card-body">
+              Incident → <strong>resolved</strong>. PR URL stored. Full audit trail in MongoDB.
+            </div>
+            <div class="chips">
+              <span class="chip" style="background:rgba(0,212,170,0.08); color:#00d4aa; border-color:rgba(0,212,170,0.25);">Resolved</span>
+              <span class="chip" style="background:rgba(0,212,170,0.08); color:#00d4aa; border-color:rgba(0,212,170,0.25);">PR Linked</span>
+              <span class="chip" style="background:rgba(0,212,170,0.08); color:#00d4aa; border-color:rgba(0,212,170,0.25);">Audit Trail</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-legend">
+        <span><div class="dot" style="background:#6366f1;"></div>Scheduler</span>
+        <span><div class="dot" style="background:#65a637;"></div>Splunk MCP</span>
+        <span><div class="dot" style="background:#049fd9;"></div>Cisco CDTSM</span>
+        <span><div class="dot" style="background:#a855f7;"></div>Gemini AI</span>
+        <span><div class="dot" style="background:#e94560;"></div>AI Agents</span>
+        <span><div class="dot" style="background:#f0883e;"></div>GitHub</span>
+        <span><div class="dot" style="background:#00d4aa;"></div>Output</span>
+      </div>
+      <div class="footer-text">
+        PRISM AI Reliability Platform · Cisco CDTSM + Splunk MCP + Google Gemini + GitHub Automation
+      </div>
+    </div>
+  </div>
+</body>
+</html>

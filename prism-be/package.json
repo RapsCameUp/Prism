@@ -1,0 +1,48 @@
+{
+  "name": "prism-be",
+  "version": "1.0.0",
+  "description": "PRISM - AI Reliability Engineer Backend",
+  "type": "module",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "seed": "tsx prisma/seed.ts",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "lint": "eslint src/",
+    "prisma:push": "prisma db push",
+    "prisma:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.0",
+    "@fastify/jwt": "^9.0.0",
+    "@fastify/swagger": "^9.0.0",
+    "@fastify/swagger-ui": "^5.0.0",
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^6.0.0",
+    "axios": "^1.7.0",
+    "bcrypt": "^5.1.1",
+    "bullmq": "^5.0.0",
+    "dotenv": "^16.4.0",
+    "fastify": "^5.0.0",
+    "fastify-plugin": "^5.0.0",
+    "ioredis": "^5.4.0",
+    "pino-pretty": "^11.0.0",
+    "socket.io": "^4.7.0",
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^22.0.0",
+    "prisma": "^6.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}
